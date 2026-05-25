@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mosaic — by @gfxs0da</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* =========================================================
+     thumb-grid · red/black · single-viewport layout
+     ========================================================= */
+
+  *, *::before, *::after { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+
+  :root {
+    --bg:           #0a0a0a;
+    --bg-elev:      #141414;
+    --bg-hover:     #1c1c1c;
+    --fg:           #e5e5e5;
+    --fg-strong:    #fafafa;
+    --muted:        #888;
+    --dim:          #555;
+    --line:         #222;
+    --line-strong:  #2e2e2e;
+    --accent:       #ef4444;
+    --accent-hover: #dc2626;
+    --accent-dim:   rgba(239, 68, 68, 0.12);
+    --accent-glow:  rgba(239, 68, 68, 0.40);
+    --on-accent:    #fff;
+  }
+
+  html, body {
+    height: 100vh;
+    height: 100dvh;
+    margin: 0;
+    overflow: hidden;
+  }
+  body {
+    font-family: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-weight: 400;
+    font-size: 13.5px;
+    line-height: 1.55;
+    color: var(--fg);
+    background: var(--bg);
+    letter-spacing: -0.005em;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+    position: relative;
+  }
+
+  button { font: inherit; color: inherit; cursor: pointer; background: none; border: 0; padding: 0; }
+  input  { font: inherit; color: inherit; }
+  ::selection { background: var(--accent); color: var(--on-accent); }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
+  /* ---------- background ---------- */
+  .bg-glow {
+    position: fixed;
+    top: -240px; right: -180px;
+    width: 580px; height: 580px;
+    background: radial-gradient(circle, var(--accent-dim) 0%, transparent 60%);
+    pointer-events: none;
+    z-index: 0;
+    filter: blur(40px);
+  }
+
+  /* ---------- app shell ---------- */
+  .app {
+    position: relative;
+    z-index: 1;
+    height: 100%;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    max-width: 1500px;
+    margin: 0 auto;
+    padding: 16px 24px;
+    gap: 16px;
+  }
+
+  /* ---------- hero ---------- */
+  .hero {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+  .hero-left { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .hero h1 {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.02em;
+    color: var(--fg-strong);
+    display: inline-flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .hero-by {
+    font-size: 12px;
+    font-weight: 400;
+    color: var(--muted);
+    letter-spacing: 0;
+  }
+  .hero-by .handle {
+    color: var(--accent);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .hero-by .handle:hover { color: var(--accent-hover); text-decoration: underline; }
+  .hero-right {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    color: var(--muted);
+    font-size: 11.5px;
+    flex-wrap: wrap;
+  }
+  .hero-right .meta { color: var(--muted); }
+  .shortcuts { display: flex; gap: 12px; color: var(--dim); }
+  .kbd {
+    display: inline-block;
+    padding: 1px 5px;
+    border: 1px solid var(--line-strong);
+    border-radius: 3px;
+    font-size: 10px;
+    color: var(--fg);
+    background: var(--bg-elev);
+    margin-right: 3px;
+  }
+
+  /* ---------- main two-column layout ---------- */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 340px 1fr;
+    gap: 20px;
+    min-height: 0;
+  }
+
+  /* ---------- controls column ---------- */
+  .controls {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 8px;
+    scrollbar-width: thin;
+    scrollbar-color: var(--line-strong) transparent;
+  }
+  .controls::-webkit-scrollbar { width: 6px; }
+  .controls::-webkit-scrollbar-track { background: transparent; }
+  .controls::-webkit-scrollbar-thumb { background: var(--line-strong); border-radius: 3px; }
+  .controls::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+  .section { margin-bottom: 22px; }
+  .section:last-child { margin-bottom: 0; }
+  .section-header {
+    margin-bottom: 10px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .section-header .num {
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .section-header h2 {
+    font-size: 12.5px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--fg-strong);
+    text-transform: lowercase;
+  }
+  .section-header .desc {
+    margin: 0 0 0 auto;
+    color: var(--dim);
+    font-size: 10.5px;
+  }
+
+  /* ---------- chips ---------- */
+  .chip-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  .chip {
+    background: var(--bg-elev);
+    border: 1px solid var(--line-strong);
+    color: var(--fg);
+    padding: 6px 11px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .chip:hover:not(:disabled) {
+    border-color: var(--muted);
+    background: var(--bg-hover);
+    color: var(--fg-strong);
+  }
+  .chip:active:not(:disabled) { transform: scale(0.96); }
+  .chip.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+  }
+  .chip.active:hover {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+  }
+  .chip-toggle::before {
+    content: '';
+    width: 7px; height: 7px;
+    border: 1px solid var(--muted);
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .chip-toggle.active::before {
+    background: var(--on-accent);
+    border-color: var(--on-accent);
+    box-shadow: inset 0 0 0 1.5px var(--accent);
+  }
+  .chip-add {
+    border-style: dashed;
+    color: var(--muted);
+  }
+  .chip-add:hover { color: var(--fg-strong); border-color: var(--accent); }
+  .chip-delete {
+    margin-left: 2px;
+    width: 13px; height: 13px;
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    opacity: 0.55;
+    transition: all 0.15s;
+    font-size: 12px;
+  }
+  .chip:hover .chip-delete { opacity: 1; }
+  .chip-delete:hover { background: rgba(0,0,0,0.3); }
+
+  /* ---------- rows ---------- */
+  .row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 0;
+    flex-wrap: wrap;
+  }
+  .row + .row { border-top: 1px solid var(--line); }
+  .row-label { color: var(--fg); font-size: 12.5px; }
+  .row-value {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .row-value .val {
+    color: var(--fg-strong);
+    font-size: 12px;
+    min-width: 32px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ---------- slider ---------- */
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 130px;
+    height: 4px;
+    background: var(--line-strong);
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; appearance: none;
+    width: 14px; height: 14px;
+    background: var(--accent);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.12s, box-shadow 0.15s;
+  }
+  input[type="range"]:hover::-webkit-slider-thumb,
+  input[type="range"]:active::-webkit-slider-thumb {
+    transform: scale(1.25);
+    box-shadow: 0 0 12px var(--accent-glow);
+  }
+  input[type="range"]::-moz-range-thumb {
+    width: 14px; height: 14px; background: var(--accent);
+    border-radius: 50%; cursor: pointer; border: none;
+  }
+
+  /* ---------- toggle ---------- */
+  .toggle { position: relative; display: inline-flex; cursor: pointer; user-select: none; }
+  .toggle input { position: absolute; opacity: 0; pointer-events: none; }
+  .toggle-switch {
+    position: relative;
+    width: 32px; height: 18px;
+    background: var(--line-strong);
+    border-radius: 999px;
+    transition: background 0.18s;
+  }
+  .toggle-switch::after {
+    content: '';
+    position: absolute; top: 2px; left: 2px;
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--muted);
+    transition: transform 0.18s, background 0.18s;
+  }
+  .toggle input:checked ~ .toggle-switch { background: var(--accent); }
+  .toggle input:checked ~ .toggle-switch::after {
+    transform: translateX(14px);
+    background: var(--on-accent);
+  }
+
+  /* ---------- dropzone ---------- */
+  .dropzone {
+    border: 1px dashed var(--line-strong);
+    padding: 18px 12px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.15s;
+    color: var(--muted);
+    font-size: 12px;
+    border-radius: 6px;
+    background: var(--bg-elev);
+  }
+  .dropzone:hover {
+    border-color: var(--muted);
+    color: var(--fg);
+    background: var(--bg-hover);
+  }
+  .dropzone.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+    color: var(--fg-strong);
+  }
+  .dropzone .main { font-weight: 500; color: var(--fg); margin-bottom: 3px; font-size: 12.5px; }
+  .dropzone .hint { color: var(--dim); font-size: 10.5px; }
+  .dropzone input[type="file"] { display: none; }
+
+  .counter-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 8px 12px;
+    background: var(--bg-elev);
+    border-radius: 4px;
+    font-size: 11.5px;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+  .counter-bar strong { color: var(--fg-strong); font-weight: 600; }
+  .cache-hint {
+    color: var(--accent);
+    font-size: 10.5px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+  .cache-hint.visible { opacity: 1; }
+
+  /* ---------- select ---------- */
+  .select-wrap { display: inline-flex; align-items: center; gap: 8px; }
+  .select-label { font-size: 11.5px; color: var(--muted); }
+  select.select {
+    background: var(--bg-elev);
+    color: var(--fg);
+    border: 1px solid var(--line-strong);
+    padding: 7px 26px 7px 11px;
+    font: inherit;
+    font-size: 12px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    border-radius: 4px;
+    background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 8 8' fill='%23888'><path d='M0 2l4 4 4-4z'/></svg>");
+    background-repeat: no-repeat;
+    background-position: right 9px center;
+    transition: border-color 0.15s, background-color 0.15s;
+  }
+  select.select:hover { border-color: var(--muted); background-color: var(--bg-hover); }
+  select.select:focus { outline: none; border-color: var(--accent); }
+  select.select option { background: var(--bg-elev); color: var(--fg); }
+
+  /* ---------- preview column ---------- */
+  .preview-col {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 10px;
+    min-height: 0;
+  }
+  .preview-meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 10px;
+    color: var(--muted);
+    font-size: 11.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .preview-meta .title {
+    color: var(--fg-strong);
+    font-weight: 600;
+    font-size: 12.5px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .preview-meta .title .num {
+    color: var(--accent);
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .preview-meta .info { color: var(--muted); }
+  .preview-meta .info b { color: var(--fg-strong); font-weight: 600; }
+
+  .preview-wrap {
+    background: var(--bg-elev);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .grid-preview {
+    --img-filter: none;
+    --grid-aspect: 16/9;
+    display: grid;
+    aspect-ratio: var(--grid-aspect);
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    transition: gap 0.18s ease;
+  }
+  .slot {
+    background: var(--bg);
+    border: 1px dashed var(--line-strong);
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--dim);
+    font-size: 12px;
+    font-weight: 500;
+    transition: border-color 0.15s, background 0.15s, border-radius 0.18s, transform 0.15s, box-shadow 0.2s, opacity 0.2s;
+    user-select: none;
+    animation: slotIn 0.22s ease;
+    min-width: 0;
+    min-height: 0;
+  }
+  @keyframes slotIn {
+    from { opacity: 0; transform: scale(0.94); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .slot:hover { border-color: var(--muted); background: var(--bg-hover); }
+  .slot.drag-over {
+    border-color: var(--accent);
+    background: var(--accent-dim);
+  }
+  .slot.has-image { border: none; cursor: grab; }
+  .slot.has-image:hover {
+    transform: scale(1.015);
+    box-shadow: 0 0 0 2px var(--accent), 0 6px 22px rgba(0, 0, 0, 0.6);
+    z-index: 2;
+  }
+  .slot.has-image:active { cursor: grabbing; }
+  .slot.dragging { opacity: 0.35; transform: scale(0.98); }
+  .slot img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    pointer-events: none;
+    filter: var(--img-filter);
+    transition: filter 0.2s ease;
+    animation: imgIn 0.28s ease;
+  }
+  @keyframes imgIn {
+    from { opacity: 0; transform: scale(1.04); }
+    to   { opacity: 1; transform: scale(1); }
+  }
+  .slot.has-image::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(0, 0, 0, 0.5) 100%);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .grid-preview.vignette-on .slot.has-image::after { opacity: 1; }
+
+  .slot-remove {
+    position: absolute; top: 6px; right: 6px;
+    width: 22px; height: 22px;
+    background: rgba(0, 0, 0, 0.7);
+    border: none; color: #fff;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 14px; line-height: 1;
+    display: none; align-items: center; justify-content: center;
+    opacity: 0.7;
+    transition: opacity 0.15s, background 0.15s, transform 0.12s;
+    z-index: 3;
+  }
+  .slot.has-image .slot-remove { display: flex; }
+  .slot.has-image:hover .slot-remove { opacity: 1; background: var(--accent); }
+  .slot-remove:hover { transform: scale(1.15); }
+
+  /* ---------- actions footer ---------- */
+  .actions {
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .actions-left, .actions-right {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .btn {
+    background: transparent;
+    color: var(--fg);
+    border: 1px solid var(--line-strong);
+    padding: 8px 16px;
+    font-size: 12px;
+    font-family: inherit;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+  }
+  .btn:hover:not(:disabled) {
+    border-color: var(--muted);
+    background: var(--bg-hover);
+    color: var(--fg-strong);
+  }
+  .btn:active:not(:disabled) { transform: scale(0.97); }
+  .btn-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--on-accent);
+    font-weight: 600;
+    padding: 8px 20px;
+  }
+  .btn-primary:hover:not(:disabled) {
+    background: var(--accent-hover);
+    border-color: var(--accent-hover);
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+  .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  /* ---------- toast ---------- */
+  .toast {
+    position: fixed; bottom: 80px; left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--bg-elev);
+    border: 1px solid var(--line-strong);
+    color: var(--fg);
+    padding: 11px 18px;
+    font-size: 12.5px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 100;
+    border-radius: 6px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+  }
+  .toast::before {
+    content: '●';
+    color: var(--accent);
+    margin-right: 8px;
+    font-size: 8px;
+    vertical-align: middle;
+  }
+  .toast.visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    html, body { height: auto; overflow: auto; }
+    .app {
+      height: auto;
+      min-height: 100vh;
+      grid-template-rows: auto auto auto;
+      padding: 14px 16px 20px;
+    }
+    .main-grid {
+      grid-template-columns: 1fr;
+      gap: 16px;
+    }
+    .controls {
+      overflow: visible;
+      padding-right: 0;
+      max-height: none;
+    }
+    .preview-wrap { aspect-ratio: 16/9; max-height: 60vh; }
+    .actions { flex-direction: column; align-items: stretch; }
+    .actions-left, .actions-right { justify-content: center; }
+  }
+  @media (max-height: 640px) and (min-width: 901px) {
+    .app { padding: 10px 16px; gap: 10px; }
+    .hero { padding-bottom: 8px; }
+    .hero h1 { font-size: 16px; }
+    .section { margin-bottom: 14px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+</style>
+</head>
+<body>
+  <div class="bg-glow"></div>
+
+  <main class="app">
+
+    <!-- HERO -->
+    <header class="hero">
+      <div class="hero-left">
+        <h1>Mosaic <span class="hero-by">by <a class="handle" href="https://github.com/dgolaus" target="_blank" rel="noopener">@gfxs0da</a></span></h1>
+      </div>
+      <div class="hero-right">
+        <span class="meta">gerador de grid — estilo roblox</span>
+        <span class="shortcuts">
+          <span><span class="kbd">ctrl+v</span> colar</span>
+          <span><span class="kbd">ctrl+z</span> desfazer</span>
+        </span>
+      </div>
+    </header>
+
+    <!-- MAIN: controls + preview -->
+    <div class="main-grid">
+
+      <!-- CONTROLES (esquerda) -->
+      <aside class="controls">
+
+        <section class="section">
+          <div class="section-header">
+            <span class="num">01</span>
+            <h2>formato</h2>
+          </div>
+          <div class="chip-row" id="formatButtons">
+            <button class="chip" data-cols="2" data-rows="2">2 × 2</button>
+            <button class="chip" data-cols="3" data-rows="2">3 × 2</button>
+            <button class="chip" data-cols="4" data-rows="2">4 × 2</button>
+            <button class="chip active" data-cols="3" data-rows="3">3 × 3</button>
+            <button class="chip" data-cols="4" data-rows="3">4 × 3</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <span class="num">02</span>
+            <h2>proporção</h2>
+          </div>
+          <div class="chip-row" id="ratioButtons">
+            <button class="chip active" data-rw="16" data-rh="9">16 : 9</button>
+            <button class="chip" data-rw="1"  data-rh="1">1 : 1</button>
+            <button class="chip" data-rw="4"  data-rh="5">4 : 5</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <span class="num">03</span>
+            <h2>ajustes</h2>
+          </div>
+          <div class="row">
+            <span class="row-label">gap</span>
+            <span class="row-value">
+              <input type="range" id="gapSlider" min="0" max="20" value="4">
+              <span class="val" id="gapValue">4px</span>
+            </span>
+          </div>
+          <div class="row">
+            <span class="row-label">cantos arredondados</span>
+            <span class="row-value">
+              <label class="toggle" title="ligar/desligar cantos arredondados">
+                <input type="checkbox" id="roundedToggle">
+                <span class="toggle-switch"></span>
+              </label>
+            </span>
+          </div>
+          <div class="row">
+            <span class="row-label">filtros</span>
+            <span class="row-value">
+              <div class="chip-row" id="filterButtons">
+                <button class="chip chip-toggle" data-filter="saturate" title="aumenta saturação das cores">sat</button>
+                <button class="chip chip-toggle" data-filter="contrast" title="aumenta contraste">contraste</button>
+                <button class="chip chip-toggle" data-filter="vignette" title="escurece bordas">vinheta</button>
+              </div>
+            </span>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <span class="num">04</span>
+            <h2>presets</h2>
+          </div>
+          <div class="chip-row" id="presetRow">
+            <button class="chip" data-preset-default title="3×3 · 16:9 · gap 4px · sem filtros">padrão</button>
+            <button class="chip chip-add" id="savePresetBtn" title="salva configuração atual">+ salvar</button>
+          </div>
+        </section>
+
+        <section class="section">
+          <div class="section-header">
+            <span class="num">05</span>
+            <h2>imagens</h2>
+          </div>
+          <div class="dropzone" id="dropzone">
+            <div class="main">arraste, cole ou clique</div>
+            <div class="hint">também drop em slot específico do preview</div>
+            <input type="file" id="fileInput" accept="image/*" multiple>
+          </div>
+          <div class="counter-bar">
+            <span><strong id="loadedCount">0</strong>/<span id="totalSlots">9</span> imagens</span>
+            <span class="cache-hint" id="cacheHint" title="imagens fora do grid visível, recuperáveis"></span>
+          </div>
+        </section>
+
+      </aside>
+
+      <!-- PREVIEW (direita) -->
+      <div class="preview-col">
+        <div class="preview-meta">
+          <span class="title"><span class="num">06</span> preview</span>
+          <span class="info"><b id="gridSizeHint">3×3 · 16:9</b> · arraste entre slots para reordenar</span>
+        </div>
+        <div class="preview-wrap">
+          <div class="grid-preview" id="gridPreview"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- AÇÕES -->
+    <footer class="actions">
+      <div class="actions-left">
+        <button class="btn" id="clearBtn" title="apaga todas as imagens (grid + cache)">limpar</button>
+        <button class="btn" id="autoArrangeBtn" disabled title="reordena de melhor pra pior por engajamento (cor, contraste, foco central)">auto-ordenar</button>
+        <button class="btn" id="shareBtn" title="copia link com configurações atuais (sem imagens)">compartilhar</button>
+      </div>
+      <div class="actions-right">
+        <div class="select-wrap">
+          <span class="select-label">resolução</span>
+          <select class="select" id="exportRes" title="largura final do PNG">
+            <option value="1920">1080p</option>
+            <option value="2560">2k</option>
+            <option value="3840">4k</option>
+          </select>
+        </div>
+        <button class="btn btn-primary" id="downloadBtn" disabled>baixar png</button>
+      </div>
+    </footer>
+
+  </main>
+
+  <div class="toast" id="toast"></div>
+
+<script>
+(function() {
+  'use strict';
+
+  const state = {
+    cols: 3, rows: 3,
+    ratioW: 16, ratioH: 9,
+    gap: 4,
+    rounded: false,
+    filters: { saturate: false, contrast: false, vignette: false },
+    images: [],
+    exportRes: 1920
+  };
+
+  let imgIdCounter = 0;
+  const newId = () => 'img_' + (++imgIdCounter);
+
+  const $ = (id) => document.getElementById(id);
+  const formatButtons = $('formatButtons');
+  const ratioButtons  = $('ratioButtons');
+  const filterButtons = $('filterButtons');
+  const presetRow     = $('presetRow');
+  const gridPreview   = $('gridPreview');
+  const gridSizeHint  = $('gridSizeHint');
+  const dropzone      = $('dropzone');
+  const fileInput     = $('fileInput');
+  const gapSlider     = $('gapSlider');
+  const gapValue      = $('gapValue');
+  const roundedToggle = $('roundedToggle');
+  const loadedCount   = $('loadedCount');
+  const totalSlots    = $('totalSlots');
+  const cacheHint     = $('cacheHint');
+  const downloadBtn   = $('downloadBtn');
+  const clearBtn      = $('clearBtn');
+  const shareBtn      = $('shareBtn');
+  const savePresetBtn = $('savePresetBtn');
+  const exportResSel  = $('exportRes');
+  const autoArrangeBtn= $('autoArrangeBtn');
+  const toast         = $('toast');
+
+  const totalCells = () => state.cols * state.rows;
+
+  // ====== TOAST ======
+  let toastTimer = null;
+  function showToast(msg) {
+    toast.textContent = msg;
+    toast.classList.add('visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toast.classList.remove('visible'), 1800);
+  }
+
+  // ====== INDEXEDDB ======
+  const DB_NAME = 'thumbgrid';
+  const STORE   = 'kv';
+
+  function dbOpen() {
+    return new Promise((resolve, reject) => {
+      const req = indexedDB.open(DB_NAME, 1);
+      req.onupgradeneeded = () => req.result.createObjectStore(STORE);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror   = () => reject(req.error);
+    });
+  }
+  async function idbPut(key, val) {
+    try {
+      const db = await dbOpen();
+      await new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readwrite');
+        tx.objectStore(STORE).put(val, key);
+        tx.oncomplete = res;
+        tx.onerror = () => rej(tx.error);
+      });
+      db.close();
+    } catch (e) {}
+  }
+  async function idbGet(key) {
+    try {
+      const db = await dbOpen();
+      const val = await new Promise((res, rej) => {
+        const tx = db.transaction(STORE, 'readonly');
+        const req = tx.objectStore(STORE).get(key);
+        req.onsuccess = () => res(req.result);
+        req.onerror   = () => rej(req.error);
+      });
+      db.close();
+      return val;
+    } catch (e) { return null; }
+  }
+
+  function serializeState() {
+    return {
+      cols: state.cols, rows: state.rows,
+      ratioW: state.ratioW, ratioH: state.ratioH,
+      gap: state.gap, rounded: state.rounded,
+      filters: { ...state.filters },
+      exportRes: state.exportRes,
+      images: state.images.map(i => i ? { id: i.id, dataUrl: i.dataUrl } : null)
+    };
+  }
+  async function deserializeAndApply(saved) {
+    if (!saved) return;
+    state.cols     = saved.cols     ?? 3;
+    state.rows     = saved.rows     ?? 3;
+    state.ratioW   = saved.ratioW   ?? 16;
+    state.ratioH   = saved.ratioH   ?? 9;
+    state.gap      = saved.gap      ?? 4;
+    state.rounded  = !!saved.rounded;
+    state.filters  = Object.assign({ saturate:false, contrast:false, vignette:false }, saved.filters || {});
+    state.exportRes = saved.exportRes ?? 1920;
+    const items = await Promise.all((saved.images || []).map(s => {
+      if (!s) return null;
+      return new Promise((res) => {
+        const img = new Image();
+        img.onload  = () => res({ img, dataUrl: s.dataUrl, id: s.id });
+        img.onerror = () => res(null);
+        img.src = s.dataUrl;
+      });
+    }));
+    state.images = items;
+    state.images.forEach(it => {
+      if (!it) return;
+      const n = parseInt(String(it.id).replace('img_', ''), 10);
+      if (!isNaN(n) && n > imgIdCounter) imgIdCounter = n;
+    });
+  }
+  let saveTimer = null;
+  function saveStateDebounced() {
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(() => idbPut('state', serializeState()), 250);
+  }
+
+  // ====== UNDO/REDO ======
+  const history = { past: [], future: [], MAX: 40 };
+  function snapshot() {
+    return {
+      cols: state.cols, rows: state.rows,
+      ratioW: state.ratioW, ratioH: state.ratioH,
+      gap: state.gap, rounded: state.rounded,
+      filters: { ...state.filters },
+      exportRes: state.exportRes,
+      images: state.images.slice()
+    };
+  }
+  function restore(snap) {
+    state.cols = snap.cols; state.rows = snap.rows;
+    state.ratioW = snap.ratioW; state.ratioH = snap.ratioH;
+    state.gap = snap.gap; state.rounded = snap.rounded;
+    state.filters = { ...snap.filters };
+    state.exportRes = snap.exportRes;
+    state.images = snap.images.slice();
+    syncUIFromState();
+    syncGrid();
+    saveStateDebounced();
+  }
+  function pushHistory() {
+    history.past.push(snapshot());
+    if (history.past.length > history.MAX) history.past.shift();
+    history.future.length = 0;
+  }
+  function undo() {
+    if (history.past.length === 0) return;
+    history.future.push(snapshot());
+    restore(history.past.pop());
+    showToast('desfeito');
+  }
+  function redo() {
+    if (history.future.length === 0) return;
+    history.past.push(snapshot());
+    restore(history.future.pop());
+    showToast('refeito');
+  }
+  function commit(mutate) {
+    pushHistory(); mutate(); syncGrid(); saveStateDebounced();
+  }
+
+  // ====== RENDER ======
+  function ensureImagesCapacity() {
+    const n = totalCells();
+    while (state.images.length < n) state.images.push(null);
+  }
+  function createSlot(index) {
+    const slot = document.createElement('div');
+    slot.className = 'slot';
+    slot.dataset.index = String(index);
+    return slot;
+  }
+  function updateSlot(slot, index) {
+    const item = state.images[index];
+    const currentId = slot.dataset.imageId || '';
+    const newIdVal = item ? item.id : '';
+    slot.dataset.index = String(index);
+    slot.style.borderRadius = state.rounded ? '6px' : '0';
+    if (currentId === newIdVal) return;
+    slot.dataset.imageId = newIdVal;
+    slot.innerHTML = '';
+    slot.classList.toggle('has-image', !!item);
+    slot.draggable = !!item;
+    if (item) {
+      const img = document.createElement('img');
+      img.src = item.dataUrl; img.alt = '';
+      slot.appendChild(img);
+      const rm = document.createElement('button');
+      rm.className = 'slot-remove';
+      rm.textContent = '×';
+      rm.title = 'remover esta imagem';
+      slot.appendChild(rm);
+    } else {
+      slot.textContent = String(index + 1).padStart(2, '0');
+    }
+  }
+  function syncGrid() {
+    ensureImagesCapacity();
+    // grid aspect baseada em cols/rows/ratio — permite que preview-wrap encaixe perfeito
+    const aspect = (state.cols * state.ratioW) / (state.rows * state.ratioH);
+    gridPreview.style.setProperty('--grid-aspect', aspect);
+    gridPreview.style.gridTemplateColumns = `repeat(${state.cols}, 1fr)`;
+    gridPreview.style.gridTemplateRows    = `repeat(${state.rows}, 1fr)`;
+    gridPreview.style.gap = state.gap + 'px';
+
+    const needed = totalCells();
+    while (gridPreview.children.length > needed) gridPreview.removeChild(gridPreview.lastChild);
+    while (gridPreview.children.length < needed) gridPreview.appendChild(createSlot(gridPreview.children.length));
+    for (let i = 0; i < needed; i++) updateSlot(gridPreview.children[i], i);
+
+    totalSlots.textContent = String(needed);
+    gridSizeHint.textContent = `${state.cols}×${state.rows} · ${state.ratioW}:${state.ratioH}`;
+    updateCounter();
+    updateFiltersClass();
+  }
+  function updateCounter() {
+    const n = totalCells();
+    const visible = state.images.slice(0, n).filter(x => x !== null).length;
+    const hidden  = state.images.slice(n).filter(x => x !== null).length;
+    loadedCount.textContent = String(visible);
+    if (hidden > 0) {
+      cacheHint.textContent = `+${hidden} em cache`;
+      cacheHint.classList.add('visible');
+    } else {
+      cacheHint.classList.remove('visible');
+      cacheHint.textContent = '';
+    }
+    downloadBtn.disabled = visible === 0;
+    autoArrangeBtn.disabled = visible < 2;
+  }
+  function updateFiltersClass() {
+    const f = [];
+    if (state.filters.saturate) f.push('saturate(1.35)');
+    if (state.filters.contrast) f.push('contrast(1.12)');
+    gridPreview.style.setProperty('--img-filter', f.join(' ') || 'none');
+    gridPreview.classList.toggle('vignette-on', !!state.filters.vignette);
+  }
+  function syncUIFromState() {
+    document.querySelectorAll('#formatButtons .chip').forEach(b => {
+      const active = parseInt(b.dataset.cols,10) === state.cols && parseInt(b.dataset.rows,10) === state.rows;
+      b.classList.toggle('active', active);
+    });
+    document.querySelectorAll('#ratioButtons .chip').forEach(b => {
+      const active = parseInt(b.dataset.rw,10) === state.ratioW && parseInt(b.dataset.rh,10) === state.ratioH;
+      b.classList.toggle('active', active);
+    });
+    document.querySelectorAll('#filterButtons .chip').forEach(b => {
+      b.classList.toggle('active', !!state.filters[b.dataset.filter]);
+    });
+    gapSlider.value = String(state.gap);
+    gapValue.textContent = state.gap + 'px';
+    roundedToggle.checked = state.rounded;
+    exportResSel.value = String(state.exportRes);
+  }
+
+  // ====== FILE LOADING ======
+  function fileToImage(file) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type || !file.type.startsWith('image/')) return reject(new Error('not image'));
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload  = () => resolve({ img, dataUrl: e.target.result, id: newId() });
+        img.onerror = reject;
+        img.src = e.target.result;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+  function loadFileToSlot(file, index) {
+    fileToImage(file).then((item) => { commit(() => { state.images[index] = item; }); }).catch(() => {});
+  }
+  function loadFilesFromIndex(files, startIndex) {
+    const arr = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+    const max = Math.min(arr.length, totalCells() - startIndex);
+    if (max <= 0) return;
+    Promise.all(arr.slice(0, max).map(fileToImage)).then((items) => {
+      commit(() => { items.forEach((item, k) => { state.images[startIndex + k] = item; }); });
+      if (items.length > 1) showToast(`${items.length} imagens adicionadas`);
+    }).catch(() => {});
+  }
+  function loadFilesBulk(files) {
+    const arr = Array.from(files).filter(f => f.type && f.type.startsWith('image/'));
+    if (arr.length === 0) return;
+    const emptyIdx = [];
+    for (let i = 0; i < totalCells() && emptyIdx.length < arr.length; i++) {
+      if (!state.images[i]) emptyIdx.push(i);
+    }
+    if (emptyIdx.length === 0) { showToast('grid cheio — aumente o formato ou limpe'); return; }
+    Promise.all(arr.slice(0, emptyIdx.length).map(fileToImage)).then((items) => {
+      commit(() => { items.forEach((item, k) => { state.images[emptyIdx[k]] = item; }); });
+      if (items.length > 1) showToast(`${items.length} imagens adicionadas`);
+    }).catch(() => {});
+  }
+  function moveItem(from, to) {
+    if (from === to) return;
+    const n = totalCells();
+    const visible = state.images.slice(0, n);
+    const cached  = state.images.slice(n);
+    const item = visible[from];
+    visible.splice(from, 1);
+    visible.splice(to, 0, item);
+    state.images = visible.concat(cached);
+  }
+
+  // ====== GRID EVENTS ======
+  gridPreview.addEventListener('click', (e) => {
+    const rm = e.target.closest('.slot-remove');
+    if (rm) {
+      e.stopPropagation();
+      const slot = rm.closest('.slot');
+      const idx = parseInt(slot.dataset.index, 10);
+      commit(() => { state.images[idx] = null; });
+      return;
+    }
+    const slot = e.target.closest('.slot');
+    if (!slot) return;
+    const idx = parseInt(slot.dataset.index, 10);
+    const input = document.createElement('input');
+    input.type = 'file'; input.accept = 'image/*';
+    input.addEventListener('change', (ev) => { const f = ev.target.files[0]; if (f) loadFileToSlot(f, idx); });
+    input.click();
+  });
+  gridPreview.addEventListener('dragstart', (e) => {
+    const slot = e.target.closest('.slot'); if (!slot) return;
+    const idx = parseInt(slot.dataset.index, 10);
+    if (!state.images[idx]) { e.preventDefault(); return; }
+    e.dataTransfer.setData('text/plain', String(idx));
+    e.dataTransfer.effectAllowed = 'move';
+    slot.classList.add('dragging');
+  });
+  gridPreview.addEventListener('dragend', (e) => {
+    const slot = e.target.closest('.slot'); if (slot) slot.classList.remove('dragging');
+  });
+  gridPreview.addEventListener('dragover', (e) => {
+    const slot = e.target.closest('.slot'); if (!slot) return;
+    e.preventDefault();
+    try { e.dataTransfer.dropEffect = e.dataTransfer.types.includes('Files') ? 'copy' : 'move'; } catch(_) {}
+    slot.classList.add('drag-over');
+  });
+  gridPreview.addEventListener('dragleave', (e) => {
+    const slot = e.target.closest('.slot'); if (!slot) return;
+    if (!slot.contains(e.relatedTarget)) slot.classList.remove('drag-over');
+  });
+  gridPreview.addEventListener('drop', (e) => {
+    const slot = e.target.closest('.slot'); if (!slot) return;
+    e.preventDefault(); e.stopPropagation();
+    slot.classList.remove('drag-over');
+    const idx = parseInt(slot.dataset.index, 10);
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type && f.type.startsWith('image/'));
+      if (files.length === 1)      loadFileToSlot(files[0], idx);
+      else if (files.length > 1)   loadFilesFromIndex(files, idx);
+      return;
+    }
+    const fromIdx = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (!isNaN(fromIdx) && fromIdx !== idx) commit(() => moveItem(fromIdx, idx));
+  });
+
+  // ====== CONTROLS ======
+  formatButtons.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    commit(() => {
+      state.cols = parseInt(btn.dataset.cols, 10);
+      state.rows = parseInt(btn.dataset.rows, 10);
+    });
+    document.querySelectorAll('#formatButtons .chip').forEach(b => b.classList.toggle('active', b === btn));
+  });
+  ratioButtons.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    commit(() => {
+      state.ratioW = parseInt(btn.dataset.rw, 10);
+      state.ratioH = parseInt(btn.dataset.rh, 10);
+    });
+    document.querySelectorAll('#ratioButtons .chip').forEach(b => b.classList.toggle('active', b === btn));
+  });
+  filterButtons.addEventListener('click', (e) => {
+    const btn = e.target.closest('.chip'); if (!btn) return;
+    const key = btn.dataset.filter;
+    commit(() => { state.filters[key] = !state.filters[key]; });
+    btn.classList.toggle('active', state.filters[key]);
+  });
+
+  gapSlider.addEventListener('input', (e) => {
+    state.gap = parseInt(e.target.value, 10);
+    gapValue.textContent = state.gap + 'px';
+    gridPreview.style.gap = state.gap + 'px';
+  });
+  let gapSnapshot = null;
+  gapSlider.addEventListener('pointerdown', () => { gapSnapshot = state.gap; });
+  gapSlider.addEventListener('pointerup', () => {
+    if (gapSnapshot !== null && gapSnapshot !== state.gap) {
+      const before = snapshot();
+      before.gap = gapSnapshot;
+      history.past.push(before);
+      if (history.past.length > history.MAX) history.past.shift();
+      history.future.length = 0;
+      saveStateDebounced();
+    }
+    gapSnapshot = null;
+  });
+
+  roundedToggle.addEventListener('change', (e) => { commit(() => { state.rounded = e.target.checked; }); });
+  exportResSel.addEventListener('change', () => { state.exportRes = parseInt(exportResSel.value, 10); saveStateDebounced(); });
+
+  // ====== DROPZONE ======
+  dropzone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', (e) => { loadFilesBulk(e.target.files); fileInput.value = ''; });
+  dropzone.addEventListener('dragover', (e) => { e.preventDefault(); dropzone.classList.add('drag-over'); });
+  dropzone.addEventListener('dragleave', (e) => { if (!dropzone.contains(e.relatedTarget)) dropzone.classList.remove('drag-over'); });
+  dropzone.addEventListener('drop', (e) => { e.preventDefault(); dropzone.classList.remove('drag-over'); loadFilesBulk(e.dataTransfer.files); });
+  document.addEventListener('dragover', (e) => e.preventDefault());
+  document.addEventListener('drop',     (e) => e.preventDefault());
+
+  // ====== CLIPBOARD ======
+  document.addEventListener('paste', (e) => {
+    const items = e.clipboardData && e.clipboardData.items; if (!items) return;
+    const files = [];
+    for (let i = 0; i < items.length; i++) {
+      const it = items[i];
+      if (it.kind === 'file' && it.type && it.type.startsWith('image/')) {
+        const f = it.getAsFile(); if (f) files.push(f);
+      }
+    }
+    if (files.length > 0) { e.preventDefault(); loadFilesBulk(files); if (files.length === 1) showToast('imagem colada'); }
+  });
+
+  // ====== KEYBOARD ======
+  document.addEventListener('keydown', (e) => {
+    const meta = e.ctrlKey || e.metaKey;
+    if (meta && !e.shiftKey && (e.key === 'z' || e.key === 'Z')) { e.preventDefault(); undo(); }
+    else if ((meta && e.shiftKey && (e.key === 'Z' || e.key === 'z')) || (meta && (e.key === 'y' || e.key === 'Y'))) { e.preventDefault(); redo(); }
+  });
+
+  // ====== CLEAR ======
+  clearBtn.addEventListener('click', () => {
+    const hadAny = state.images.some(x => x !== null);
+    commit(() => { state.images = []; });
+    if (hadAny) showToast('grid e cache limpos');
+  });
+
+  // ====== PRESETS ======
+  const DEFAULT_PRESET = {
+    cols: 3, rows: 3, ratioW: 16, ratioH: 9,
+    gap: 4, rounded: false,
+    filters: { saturate:false, contrast:false, vignette:false },
+    exportRes: 1920
+  };
+  let userPresets = [];
+
+  async function loadPresets() {
+    const saved = await idbGet('presets');
+    userPresets = Array.isArray(saved) ? saved : [];
+    renderPresets();
+  }
+  async function savePresets() { await idbPut('presets', userPresets); }
+
+  function applyPresetSettings(s) {
+    commit(() => {
+      state.cols = s.cols; state.rows = s.rows;
+      state.ratioW = s.ratioW; state.ratioH = s.ratioH;
+      state.gap = s.gap; state.rounded = s.rounded;
+      state.filters = { ...s.filters };
+      state.exportRes = s.exportRes ?? state.exportRes;
+    });
+    syncUIFromState();
+  }
+
+  function renderPresets() {
+    const keep = new Set();
+    presetRow.querySelectorAll('.chip').forEach(c => {
+      if (c.hasAttribute('data-preset-default') || c.id === 'savePresetBtn') keep.add(c);
+    });
+    Array.from(presetRow.children).forEach(c => { if (!keep.has(c)) c.remove(); });
+
+    userPresets.forEach((p, i) => {
+      const chip = document.createElement('button');
+      chip.className = 'chip';
+      chip.dataset.userPreset = String(i);
+      chip.title = `${p.settings.cols}×${p.settings.rows} · ${p.settings.ratioW}:${p.settings.ratioH} · gap ${p.settings.gap}px`;
+      chip.appendChild(document.createTextNode(p.name));
+      const del = document.createElement('span');
+      del.className = 'chip-delete';
+      del.textContent = '×';
+      del.title = 'remover preset';
+      del.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        userPresets.splice(i, 1);
+        await savePresets();
+        renderPresets();
+      });
+      chip.appendChild(del);
+      presetRow.insertBefore(chip, savePresetBtn);
+    });
+  }
+
+  presetRow.addEventListener('click', (e) => {
+    const def = e.target.closest('[data-preset-default]');
+    if (def) { applyPresetSettings(DEFAULT_PRESET); showToast('preset padrão aplicado'); return; }
+    const up = e.target.closest('[data-user-preset]');
+    if (up && !e.target.classList.contains('chip-delete')) {
+      const i = parseInt(up.dataset.userPreset, 10);
+      const p = userPresets[i];
+      if (p) { applyPresetSettings(p.settings); showToast(`preset "${p.name}" aplicado`); }
+    }
+  });
+
+  savePresetBtn.addEventListener('click', async () => {
+    const name = (prompt('nome do preset:') || '').trim().toLowerCase();
+    if (!name) return;
+    userPresets.push({
+      name,
+      settings: {
+        cols: state.cols, rows: state.rows,
+        ratioW: state.ratioW, ratioH: state.ratioH,
+        gap: state.gap, rounded: state.rounded,
+        filters: { ...state.filters },
+        exportRes: state.exportRes
+      }
+    });
+    await savePresets();
+    renderPresets();
+    showToast('preset salvo');
+  });
+
+  // ====== SHARE ======
+  function buildShareUrl() {
+    const cfg = {
+      c: state.cols, r: state.rows,
+      rw: state.ratioW, rh: state.ratioH,
+      g: state.gap, rd: state.rounded ? 1 : 0,
+      f: (state.filters.saturate?1:0) | (state.filters.contrast?2:0) | (state.filters.vignette?4:0),
+      e: state.exportRes
+    };
+    const enc = btoa(JSON.stringify(cfg)).replace(/=+$/, '');
+    return `${location.origin}${location.pathname}#cfg=${enc}`;
+  }
+  function applyShareFromHash() {
+    if (!location.hash.startsWith('#cfg=')) return false;
+    try {
+      const raw = location.hash.slice(5);
+      const padded = raw + '='.repeat((4 - raw.length % 4) % 4);
+      const cfg = JSON.parse(atob(padded));
+      state.cols = cfg.c ?? state.cols; state.rows = cfg.r ?? state.rows;
+      state.ratioW = cfg.rw ?? state.ratioW; state.ratioH = cfg.rh ?? state.ratioH;
+      state.gap = cfg.g ?? state.gap; state.rounded = !!cfg.rd;
+      state.filters.saturate = !!(cfg.f & 1);
+      state.filters.contrast = !!(cfg.f & 2);
+      state.filters.vignette = !!(cfg.f & 4);
+      state.exportRes = cfg.e ?? state.exportRes;
+      history.past.length = 0; history.future.length = 0;
+      window.history.replaceState(null, '', location.pathname);
+      return true;
+    } catch (e) { return false; }
+  }
+  shareBtn.addEventListener('click', async () => {
+    const url = buildShareUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      showToast('link copiado — só configuração, sem imagens');
+    } catch (e) {
+      const ta = document.createElement('textarea');
+      ta.value = url; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+      showToast('link copiado — só configuração, sem imagens');
+    }
+  });
+
+  // ====== AUTO-ORDENAR ======
+  const _scoreCanvas = document.createElement('canvas');
+  _scoreCanvas.width = 128; _scoreCanvas.height = 128;
+  const _scoreCtx = _scoreCanvas.getContext('2d', { willReadFrequently: true });
+
+  function scoreImage(img) {
+    const SIZE = 128;
+    _scoreCtx.clearRect(0, 0, SIZE, SIZE);
+    _scoreCtx.drawImage(img, 0, 0, SIZE, SIZE);
+    const data = _scoreCtx.getImageData(0, 0, SIZE, SIZE).data;
+    let sumSat = 0, sumBri = 0, sumLum = 0, sumLumSq = 0;
+    let centerMass = 0, edgeMass = 0;
+    const colors = new Set();
+    const halfSize = SIZE / 2;
+    for (let i = 0, p = 0; i < data.length; i += 4, p++) {
+      const r = data[i], g = data[i+1], b = data[i+2];
+      const max = Math.max(r, g, b), min = Math.min(r, g, b);
+      const sat = max === 0 ? 0 : (max - min) / max;
+      const bri = (r + g + b) / 3 / 255;
+      sumSat += sat; sumBri += bri;
+      const lum = 0.299*r + 0.587*g + 0.114*b;
+      sumLum += lum; sumLumSq += lum * lum;
+      const px = p % SIZE, py = (p / SIZE) | 0;
+      const dx = (px - halfSize) / halfSize;
+      const dy = (py - halfSize) / halfSize;
+      const distSq = dx*dx + dy*dy;
+      if (distSq < 0.16) centerMass += sat;
+      else if (distSq > 0.49) edgeMass += sat;
+      colors.add(((r >> 5) << 6) | ((g >> 5) << 3) | (b >> 5));
+    }
+    const n = SIZE * SIZE;
+    const avgSat = sumSat / n;
+    const avgBri = sumBri / n;
+    const meanLum = sumLum / n;
+    const variance = Math.max(0, sumLumSq / n - meanLum * meanLum);
+    const stdDev = Math.sqrt(variance);
+    const contrast = Math.min(1, stdDev / 80);
+    const briBalance = 1 - Math.min(1, Math.abs(avgBri - 0.55) * 2);
+    const totalMass = centerMass + edgeMass;
+    const centerFocus = totalMass > 0 ? centerMass / totalMass : 0.5;
+    const variety = Math.min(1, colors.size / 220);
+    return 0.30 * avgSat + 0.25 * contrast + 0.15 * centerFocus + 0.15 * variety + 0.15 * briBalance;
+  }
+
+  async function autoArrange() {
+    const n = totalCells();
+    const visible = state.images.slice(0, n);
+    const cached  = state.images.slice(n);
+    autoArrangeBtn.disabled = true;
+    const originalText = autoArrangeBtn.textContent;
+    autoArrangeBtn.textContent = 'analisando…';
+    await new Promise(r => requestAnimationFrame(r));
+    const scored = visible.map((item, idx) => ({ item, idx, score: item ? scoreImage(item.img) : -Infinity }));
+    scored.sort((a, b) => b.score - a.score);
+    const changed = scored.some((s, i) => s.idx !== i);
+    autoArrangeBtn.textContent = originalText;
+    if (!changed) { updateCounter(); showToast('já está na melhor ordem'); return; }
+    const sortedVisible = scored.map(s => s.item);
+    commit(() => { state.images = sortedVisible.concat(cached); });
+    updateCounter();
+    const filledCount = scored.filter(s => s.score > -Infinity).length;
+    showToast(`${filledCount} thumbs reordenadas por engajamento`);
+  }
+  autoArrangeBtn.addEventListener('click', autoArrange);
+
+  // ====== EXPORT ======
+  downloadBtn.addEventListener('click', exportPng);
+  function exportPng() {
+    const targetW = state.exportRes;
+    const previewSlot = gridPreview.querySelector('.slot');
+    const previewW = previewSlot ? previewSlot.getBoundingClientRect().width : 200;
+    const denom = state.cols + (state.gap * (state.cols - 1)) / Math.max(previewW, 1);
+    const cellW = Math.round(targetW / denom);
+    const cellH = Math.round(cellW * state.ratioH / state.ratioW);
+    const scale = cellW / Math.max(previewW, 1);
+    const gapPx    = Math.round(state.gap * scale);
+    const radiusPx = state.rounded ? Math.round(6 * scale) : 0;
+    const totalW = cellW * state.cols + gapPx * (state.cols - 1);
+    const totalH = cellH * state.rows + gapPx * (state.rows - 1);
+    const canvas = document.createElement('canvas');
+    canvas.width  = totalW; canvas.height = totalH;
+    const ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, totalW, totalH);
+    ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+    const f = [];
+    if (state.filters.saturate) f.push('saturate(1.35)');
+    if (state.filters.contrast) f.push('contrast(1.12)');
+    const filterStr = f.join(' ');
+    for (let r = 0; r < state.rows; r++) {
+      for (let c = 0; c < state.cols; c++) {
+        const idx = r * state.cols + c;
+        const item = state.images[idx];
+        if (!item) continue;
+        const x = c * (cellW + gapPx);
+        const y = r * (cellH + gapPx);
+        ctx.save();
+        if (radiusPx > 0) { roundRectPath(ctx, x, y, cellW, cellH, radiusPx); ctx.clip(); }
+        else { ctx.beginPath(); ctx.rect(x, y, cellW, cellH); ctx.clip(); }
+        if (filterStr) ctx.filter = filterStr;
+        drawCover(ctx, item.img, x, y, cellW, cellH);
+        ctx.filter = 'none';
+        if (state.filters.vignette) {
+          const cx = x + cellW/2, cy = y + cellH/2;
+          const ri = Math.min(cellW, cellH) * 0.35;
+          const ro = Math.max(cellW, cellH) * 0.75;
+          const grad = ctx.createRadialGradient(cx, cy, ri, cx, cy, ro);
+          grad.addColorStop(0, 'rgba(0,0,0,0)');
+          grad.addColorStop(1, 'rgba(0,0,0,0.5)');
+          ctx.fillStyle = grad; ctx.fillRect(x, y, cellW, cellH);
+        }
+        ctx.restore();
+      }
+    }
+    canvas.toBlob((blob) => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `mosaic-${state.cols}x${state.rows}-${state.exportRes}.png`;
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+      showToast(`png baixado · ${totalW}×${totalH}`);
+    }, 'image/png');
+  }
+  function roundRectPath(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y); ctx.lineTo(x + w - r, y);
+    ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h);
+    ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r);
+    ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+  function drawCover(ctx, img, dx, dy, dw, dh) {
+    const ir = img.width / img.height;
+    const dr = dw / dh;
+    let sx, sy, sw, sh;
+    if (ir > dr) { sh = img.height; sw = sh * dr; sx = (img.width - sw) / 2; sy = 0; }
+    else         { sw = img.width;  sh = sw / dr; sx = 0; sy = (img.height - sh) / 2; }
+    ctx.drawImage(img, sx, sy, sw, sh, dx, dy, dw, dh);
+  }
+
+  // ====== INIT ======
+  (async function init() {
+    const sharedApplied = applyShareFromHash();
+    const saved = await idbGet('state');
+    if (saved && !sharedApplied) { await deserializeAndApply(saved); }
+    else if (sharedApplied && saved) { await deserializeAndApply(saved); applyShareFromHash(); }
+    await loadPresets();
+    syncUIFromState();
+    syncGrid();
+  })();
+})();
+
+/* ============================================================
+   Smooth scroll — só ativa em viewport mobile (body com scroll).
+   No layout desktop, body não scrolla — controls-col tem scroll
+   nativo próprio, e o lerp seria contraproducente.
+   ============================================================ */
+(() => {
+  'use strict';
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (matchMedia('(hover: none)').matches) return;
+
+  let target  = window.scrollY;
+  let current = window.scrollY;
+  let raf = null;
+  const EASE = 0.10;
+
+  const bodyScrollable = () =>
+    document.documentElement.scrollHeight > window.innerHeight + 1;
+  const maxScroll = () =>
+    Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const clamp = (v) => Math.max(0, Math.min(v, maxScroll()));
+
+  function loop() {
+    current += (target - current) * EASE;
+    if (Math.abs(target - current) < 0.5) {
+      current = target; window.scrollTo(0, current); raf = null; return;
+    }
+    window.scrollTo(0, current);
+    raf = requestAnimationFrame(loop);
+  }
+  function start() { if (raf == null) raf = requestAnimationFrame(loop); }
+
+  window.addEventListener('wheel', (e) => {
+    if (e.ctrlKey) return;
+    if (!bodyScrollable()) return;          // viewport-mode: deixa scroll interno funcionar
+    if (e.target.closest && e.target.closest('.controls')) return; // nunca intercepta scroll interno
+    e.preventDefault();
+    target = clamp(target + e.deltaY);
+    start();
+  }, { passive: false });
+
+  window.addEventListener('scroll', () => {
+    if (raf != null) return;
+    const drift = Math.abs(window.scrollY - current);
+    if (drift > 4) target = current = window.scrollY;
+  }, { passive: true });
+
+  window.addEventListener('resize', () => { target = clamp(target); });
+})();
+</script>
+</body>
+</html>
