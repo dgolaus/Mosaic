@@ -3,13 +3,13 @@
 > gerador client-side de grid de thumbnails estilo roblox
 
 <p>
-  <a href="https://dgolaus.github.io/mosaic/">
+  <a href="https://dgolaus.github.io/Mosaic/">
     <img src="https://img.shields.io/badge/live-demo-ef4444?style=for-the-badge&labelColor=000000" alt="live demo" />
   </a>
-  <a href="https://github.com/dgolaus/mosaic">
+  <a href="https://github.com/dgolaus/Mosaic">
     <img src="https://img.shields.io/badge/source-github-0a0a0a?style=for-the-badge&logo=github&logoColor=white" alt="source" />
   </a>
-  <a href="https://github.com/dgolaus/mosaic/issues/new">
+  <a href="https://github.com/dgolaus/Mosaic/issues/new">
     <img src="https://img.shields.io/badge/feedback-abrir%20issue-ef4444?style=for-the-badge&labelColor=000000" alt="feedback" />
   </a>
 </p>
@@ -86,7 +86,7 @@ debounce de 250ms — toda mudança de estado dispara save automático. recarreg
 botão `compartilhar` gera URL no formato:
 
 ```
-https://dgolaus.github.io/mosaic/#cfg=eyJjIjozLC...
+https://dgolaus.github.io/Mosaic/#cfg=eyJjIjozLC...
 ```
 
 base64 do json compacto (`c`/`r`/`rw`/`rh`/`g`/`rd`/`f`/`e`). só configuração — imagens **não** vão no link (seriam MB de base64). abre o link → setting aplicado, manda foto na hora.
